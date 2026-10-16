@@ -1,0 +1,1752 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>上山市弁天二丁目の野望</title>
+
+<link rel="stylesheet"
+href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
+<style>
+:root{
+--bg:#0b1727;
+--panel:#192d43;
+--panel2:#29445c;
+--gold:#f3c77b;
+--text:#f6f0e5;
+--muted:#aebfd0;
+--green:#4db98c;
+--red:#d96c66;
+}
+
+*{box-sizing:border-box}
+
+html,body{
+margin:0;
+width:100%;
+height:100%;
+background:#08121e;
+color:var(--text);
+font-family:system-ui,-apple-system,sans-serif;
+}
+
+button{font:inherit;cursor:pointer;color:inherit}
+
+#game{
+height:100dvh;
+max-width:650px;
+margin:auto;
+display:flex;
+flex-direction:column;
+overflow:hidden;
+background:var(--bg);
+}
+
+header{
+padding:8px 11px;
+background:#07111d;
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:10px;
+}
+
+h1{
+font-size:16px;
+margin:0;
+color:var(--gold);
+letter-spacing:.5px;
+}
+
+.subtitle{
+font-size:10px;
+color:var(--muted);
+}
+
+#chapter{
+font-size:11px;
+text-align:right;
+color:var(--gold);
+}
+
+#year{
+font-size:10px;
+color:var(--muted);
+text-align:right;
+}
+
+#progress{
+height:5px;
+background:#34475b;
+}
+
+#progressFill{
+height:100%;
+width:0%;
+background:var(--gold);
+transition:width .15s;
+}
+
+.stats{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:5px;
+padding:6px;
+}
+
+.stat{
+background:#233a50;
+border-radius:7px;
+padding:5px 2px;
+text-align:center;
+font-size:10px;
+color:var(--muted);
+}
+
+.stat b{
+display:block;
+font-size:17px;
+color:var(--gold);
+}
+
+#mapArea{
+flex:1;
+min-height:110px;
+margin:0 7px;
+border:1px solid #59738a;
+border-radius:10px;
+overflow:hidden;
+position:relative;
+background:#1b3449;
+}
+
+#map{
+height:100%;
+width:100%;
+z-index:1;
+}
+
+#mapLabel{
+position:absolute;
+top:8px;
+left:8px;
+z-index:500;
+padding:7px 9px;
+border-radius:6px;
+background:#091728e8;
+font-size:11px;
+pointer-events:none;
+max-width:78%;
+}
+
+#mapLabel b{
+color:var(--gold);
+}
+
+#mapCredit{
+position:absolute;
+bottom:21px;
+left:7px;
+z-index:500;
+background:#091728c9;
+padding:3px 5px;
+border-radius:3px;
+font-size:9px;
+pointer-events:none;
+}
+
+.leaflet-container{
+background:#233b4b;
+}
+
+.leaflet-control-attribution{
+font-size:8px!important;
+}
+
+.leaflet-control-zoom a{
+background:#1b3449!important;
+color:#f5e9d3!important;
+border-color:#4d6a80!important;
+}
+
+.place-marker{
+width:25px;
+height:25px;
+border-radius:50%;
+border:2px solid #f6e8ca;
+background:#b64e50;
+display:grid;
+place-items:center;
+box-shadow:0 2px 8px #0009;
+font-weight:bold;
+font-size:11px;
+color:white;
+}
+
+.place-marker.owned{
+background:#238b66;
+}
+
+.place-marker.home{
+background:#e1a74e;
+color:#1b1a18;
+}
+
+.place-marker.selected{
+outline:3px solid #fff;
+outline-offset:2px;
+}
+
+#target{
+background:#1a3046;
+margin:5px 7px 0;
+border-radius:7px;
+padding:7px 9px;
+min-height:44px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+gap:8px;
+}
+
+#targetName{
+font-size:13px;
+font-weight:bold;
+color:var(--gold);
+}
+
+#targetDesc{
+font-size:10px;
+color:var(--muted);
+}
+
+#targetRight{
+font-size:10px;
+text-align:right;
+white-space:nowrap;
+}
+
+#heroLine{
+display:flex;
+gap:8px;
+align-items:center;
+padding:6px 9px;
+}
+
+#heroPortrait{
+width:46px;
+height:46px;
+image-rendering:pixelated;
+background:#233c52;
+border:1px solid #8a9eaa;
+border-radius:6px;
+}
+
+#heroInfo{
+flex:1;
+min-width:0;
+}
+
+#heroName{
+font-size:12px;
+font-weight:bold;
+color:var(--gold);
+}
+
+#heroSpeech{
+font-size:11px;
+line-height:1.4;
+color:#e4eaf0;
+}
+
+#partyButton{
+background:#2b4b63;
+border:1px solid #718ca0;
+border-radius:6px;
+font-size:11px;
+padding:8px;
+}
+
+#log{
+background:#233b51;
+border-left:3px solid var(--gold);
+margin:0 7px 5px;
+padding:6px 8px;
+font-size:11px;
+line-height:1.45;
+min-height:40px;
+border-radius:4px;
+}
+
+#actions{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:5px;
+padding:0 7px max(9px,env(safe-area-inset-bottom));
+}
+
+#actions button{
+min-height:46px;
+background:#2a4962;
+border:1px solid #6e8ba0;
+border-radius:8px;
+font-size:12px;
+padding:4px 2px;
+}
+
+#actions button small{
+display:block;
+font-size:10px;
+color:#d0dce6;
+}
+
+#actions button.primary{
+background:#c8934c;
+color:#142333;
+font-weight:bold;
+}
+
+#actions button.primary small{
+color:#263749;
+}
+
+#actions button.active{
+background:#895d36;
+}
+
+#modal,#battle{
+position:fixed;
+inset:0;
+background:#07111eea;
+z-index:3000;
+display:none;
+align-items:center;
+justify-content:center;
+padding:15px;
+}
+
+#modal.show,#battle.show{
+display:flex;
+}
+
+.window{
+width:min(430px,100%);
+max-height:87dvh;
+overflow:auto;
+background:#1c344a;
+border:1px solid var(--gold);
+border-radius:13px;
+padding:18px;
+box-shadow:0 12px 40px #0008;
+}
+
+.window h2{
+font-size:19px;
+margin:0 0 12px;
+color:var(--gold);
+}
+
+.window p{
+font-size:13px;
+line-height:1.8;
+white-space:pre-line;
+}
+
+.window button{
+width:100%;
+display:block;
+text-align:left;
+background:#34536b;
+border:1px solid #7c93a6;
+border-radius:7px;
+padding:11px;
+margin-top:7px;
+font-size:13px;
+}
+
+.window button:active{
+background:#a77741;
+}
+
+#battle .window{
+text-align:center;
+}
+
+#fighters{
+display:flex;
+align-items:center;
+justify-content:space-around;
+gap:10px;
+padding:12px 0;
+}
+
+#fighters canvas{
+width:110px;
+height:110px;
+image-rendering:pixelated;
+}
+
+#fighterHero{
+animation:charge .35s infinite alternate;
+}
+
+#fighterEnemy{
+animation:shake .12s infinite alternate;
+}
+
+@keyframes charge{
+to{transform:translateX(15px) rotate(-5deg)}
+}
+
+@keyframes shake{
+to{transform:translateX(5px)}
+}
+
+#battleResult{
+font-size:13px;
+color:#e5edf3;
+}
+
+.roster{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:6px;
+}
+
+.roster button{
+font-size:10px;
+text-align:center;
+padding:7px 2px;
+}
+
+.roster canvas{
+display:block;
+width:47px;
+height:47px;
+margin:auto;
+image-rendering:pixelated;
+}
+
+@media(max-height:700px){
+header{padding:4px 9px}
+.stats{padding:3px 6px}
+.stat{padding:2px}
+.stat b{font-size:15px}
+#heroLine{padding:3px 8px}
+#heroPortrait{width:38px;height:38px}
+#log{min-height:30px;padding:4px 7px}
+#actions button{min-height:39px}
+#target{min-height:37px;padding:4px 8px}
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+<header>
+<div>
+<h1>上山市弁天二丁目の野望</h1>
+<div class="subtitle">弁天ザウルスの天下統一戦記</div>
+</div>
+<div>
+<div id="chapter">第1章</div>
+<div id="year">1年目・春</div>
+</div>
+</header>
+
+<div id="progress">
+<div id="progressFill"></div>
+</div>
+
+<div class="stats">
+<div class="stat"><b id="territory">1/4</b>領土</div>
+<div class="stat"><b id="money">100</b>軍資金</div>
+<div class="stat"><b id="army">80</b>兵力</div>
+<div class="stat"><b id="trust">60</b>民心</div>
+</div>
+
+<div id="mapArea">
+<div id="map"></div>
+<div id="mapLabel">
+<b id="mapTitle">弁天二丁目</b>
+<div id="mapSub">実際の道路地図を表示</div>
+</div>
+<div id="mapCredit">攻略拠点のマーカーはゲーム用</div>
+</div>
+
+<div id="target">
+<div>
+<div id="targetName">地図から攻略地点を選択</div>
+<div id="targetDesc">弁天二丁目から天下統一へ</div>
+</div>
+<div id="targetRight">未選択</div>
+</div>
+
+<div id="heroLine">
+<canvas id="heroPortrait" width="48" height="48"></canvas>
+<div id="heroInfo">
+<div id="heroName">弁天ザウルス</div>
+<div id="heroSpeech">「まずは町内から天下を取るぞ！」</div>
+</div>
+<button id="partyButton">仲間・編成</button>
+</div>
+
+<div id="log">
+秘書官「町内会の議事録に、天下統一と書いておきました。」
+</div>
+
+<div id="actions">
+<button id="attack" class="active">
+出陣
+<small>兵力を使う</small>
+</button>
+<button id="talk">
+外交
+<small>民心で勝負</small>
+</button>
+<button id="gift">
+贈答
+<small>軍資金を使う</small>
+</button>
+<button id="train">
+徴兵
+<small>軍資金−20</small>
+</button>
+<button id="develop">
+内政
+<small>軍資金−15</small>
+</button>
+<button id="run" class="primary">
+▶ 進軍開始
+<small>自動進行</small>
+</button>
+</div>
+
+</div>
+
+<div id="modal">
+<div class="window">
+<h2 id="modalTitle"></h2>
+<p id="modalText"></p>
+<div id="modalButtons"></div>
+</div>
+</div>
+
+<div id="battle">
+<div class="window">
+<h2 id="battleTitle">戦闘開始</h2>
+<div id="fighters">
+<canvas id="fighterHero" width="48" height="48"></canvas>
+<strong>VS</strong>
+<canvas id="fighterEnemy" width="48" height="48"></canvas>
+</div>
+<p id="battleResult"></p>
+</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+"use strict";
+
+/*
+ 上山市弁天二丁目の野望 Ver.5.0
+
+ 地図：
+ OpenStreetMap + Leaflet
+
+ 第1章：
+ 弁天二丁目周辺のゲーム用拠点
+
+ 第2章：
+ 上山市内の実在する地名・施設を
+ モデルにした攻略拠点
+
+ 第3章：
+ 山形県35市町村
+
+ 注意：
+ 第1・2章のマーカーは攻略用の
+ 代表地点であり、行政境界ではない。
+
+ 第3章は行政境界GeoJSONを取得し、
+ 取得できなければ代表地点表示に
+ 切り替える。
+*/
+
+const $=id=>document.getElementById(id);
+
+const rand=(a,b)=>
+Math.floor(Math.random()*(b-a+1))+a;
+
+const clamp=(n,a,b)=>
+Math.max(a,Math.min(b,n));
+
+const HOME="benten2";
+
+const CHAPTERS=[
+{
+title:"第1章・弁天二丁目",
+mapTitle:"弁天二丁目統一編",
+center:[38.17,140.28],
+zoom:15,
+places:[
+{
+id:"benten2",
+name:"弁天二丁目",
+lat:38.17,
+lng:140.28,
+power:0,
+hero:"弁天ザウルス",
+good:"町内会の議事録"
+},
+{
+id:"benten1",
+name:"弁天一丁目",
+lat:38.173,
+lng:140.278,
+power:24,
+hero:"弁天の番長",
+good:"回覧板"
+},
+{
+id:"bentenEast",
+name:"弁天東地区",
+lat:38.171,
+lng:140.285,
+power:30,
+hero:"東の自治会長",
+good:"防災倉庫"
+},
+{
+id:"bentenSouth",
+name:"弁天南地区",
+lat:38.166,
+lng:140.281,
+power:34,
+hero:"南の見回り隊長",
+good:"町内会費"
+}
+]
+},
+{
+title:"第2章・上山市",
+mapTitle:"上山市統一編",
+center:[38.15,140.27],
+zoom:12,
+places:[
+{
+id:"city_benten",
+name:"弁天地区",
+lat:38.17,
+lng:140.28,
+power:0,
+hero:"弁天ザウルス",
+good:"弁天の誇り"
+},
+{
+id:"city_center",
+name:"上山城周辺",
+lat:38.157,
+lng:140.276,
+power:55,
+hero:"上山城の城主",
+good:"上山城"
+},
+{
+id:"city_station",
+name:"かみのやま温泉駅周辺",
+lat:38.152,
+lng:140.278,
+power:42,
+hero:"駅前の商人",
+good:"交通網"
+},
+{
+id:"city_hayama",
+name:"葉山地区",
+lat:38.144,
+lng:140.262,
+power:48,
+hero:"葉山の湯守",
+good:"温泉"
+},
+{
+id:"city_zao",
+name:"蔵王坊平",
+lat:38.126,
+lng:140.395,
+power:62,
+hero:"蔵王の山岳隊長",
+good:"山岳兵"
+},
+{
+id:"city_narage",
+name:"楢下宿",
+lat:38.112,
+lng:140.245,
+power:45,
+hero:"宿場の番人",
+good:"宿場町"
+},
+{
+id:"city_kaminoyama",
+name:"上山市役所周辺",
+lat:38.15,
+lng:140.269,
+power:70,
+hero:"市役所の秘書官",
+good:"行政権"
+},
+{
+id:"city_mokichi",
+name:"茂吉記念館周辺",
+lat:38.174,
+lng:140.298,
+power:50,
+hero:"歌人の守護者",
+good:"文化"
+}
+]
+},
+{
+title:"第3章・山形県",
+mapTitle:"山形県統一編",
+center:[38.55,140.15],
+zoom:8,
+places:[
+["06201","山形市",38.255,140.339,90,"最上義光","芋煮"],
+["06202","米沢市",37.922,140.117,85,"上杉鷹山","米沢牛"],
+["06203","鶴岡市",38.727,139.827,75,"だだちゃ豆仙人","だだちゃ豆"],
+["06204","酒田市",38.914,139.836,75,"酒田の豪商","酒田港"],
+["06205","新庄市",38.765,140.301,66,"祭りの頭領","新庄まつり"],
+["06206","寒河江市",38.381,140.276,55,"果樹姫","さくらんぼ"],
+["06207","上山市",38.15,140.278,0,"弁天ザウルス","温泉"],
+["06208","村山市",38.484,140.381,52,"バラの騎士","バラ"],
+["06209","長井市",38.107,140.041,53,"あやめ剣士","あやめ"],
+["06210","天童市",38.362,140.378,64,"将棋の棋士","将棋駒"],
+["06211","東根市",38.432,140.391,59,"さくらんぼ将軍","佐藤錦"],
+["06212","尾花沢市",38.601,140.405,52,"すいか武者","すいか"],
+["06213","南陽市",38.055,140.148,52,"ワイン公爵","ワイン"],
+["06301","山辺町",38.29,140.264,38,"仕立て師","ニット"],
+["06302","中山町",38.333,140.282,37,"芋煮奉行","芋煮"],
+["06321","河北町",38.427,140.315,42,"紅花商人","紅花"],
+["06322","西川町",38.425,140.148,48,"月山修験者","月山"],
+["06323","朝日町",38.299,140.145,42,"りんご錬金術師","りんご"],
+["06324","大江町",38.38,140.205,41,"渡し守","最上川"],
+["06341","大石田町",38.594,140.373,43,"そば打ち名人","そば"],
+["06361","金山町",38.884,140.339,48,"金山杉の棟梁","金山杉"],
+["06362","最上町",38.758,140.52,48,"湯治僧","温泉"],
+["06363","舟形町",38.692,140.319,39,"鮎侍","鮎"],
+["06364","真室川町",38.858,140.252,44,"踊り子","真室川音頭"],
+["06365","大蔵村",38.704,140.23,42,"肘折の湯守","肘折温泉"],
+["06366","鮭川村",38.796,140.224,37,"鮭川の漁師","鮭"],
+["06367","戸沢村",38.738,140.14,40,"最上川の船頭","最上川"],
+["06381","高畠町",38.003,140.189,48,"ぶどう姫","ぶどう"],
+["06382","川西町",38.004,140.045,43,"ダリアの女王","ダリア"],
+["06401","小国町",38.061,139.744,52,"小国のマタギ","山菜"],
+["06402","白鷹町",38.185,140.099,42,"紅花忍者","紅花"],
+["06403","飯豊町",38.046,139.989,46,"山岳隊長","飯豊山"],
+["06426","三川町",38.796,139.85,40,"菜の花姫","菜の花"],
+["06428","庄内町",38.849,139.905,47,"庄内米奉行","庄内米"],
+["06461","遊佐町",39.015,139.908,48,"鳥海の山伏","鳥海山"]
+].map(a=>({
+id:a[0],
+name:a[1],
+lat:a[2],
+lng:a[3],
+power:a[4],
+hero:a[5],
+good:a[6]
+}))
+}
+];
+
+function initialState(){
+return{
+chapter:0,
+year:1,
+season:0,
+money:100,
+army:80,
+trust:60,
+owned:["benten2"],
+recruits:[],
+party:[],
+flags:{},
+military:0,
+diplomacy:0,
+development:0,
+reputation:0
+};
+}
+
+const SAVE_KEY="benten-saurus-v5";
+
+let state;
+
+try{
+state=JSON.parse(localStorage.getItem(SAVE_KEY))||initialState();
+if(!Array.isArray(state.owned))state=initialState();
+}catch(e){
+state=initialState();
+}
+
+let selected=null;
+let mode="attack";
+let running=false;
+let progress=0;
+let busy=false;
+let map=null;
+let markers=[];
+let boundaryLayer=null;
+let mapReady=false;
+
+function save(){
+try{
+localStorage.setItem(SAVE_KEY,JSON.stringify(state));
+}catch(e){}
+}
+
+function chapterData(){
+return CHAPTERS[state.chapter];
+}
+
+function placeById(id){
+return chapterData().places.find(p=>p.id===id);
+}
+
+function log(text){
+$("log").textContent=text;
+}
+
+function say(text){
+$("heroSpeech").textContent="「"+text+"」";
+}
+
+function pixel(canvas,type=0){
+const c=canvas.getContext("2d");
+c.clearRect(0,0,48,48);
+c.imageSmoothingEnabled=false;
+
+const r=(x,y,w,h,color)=>{
+c.fillStyle=color;
+c.fillRect(x,y,w,h);
+};
+
+r(0,0,48,48,"#172d42");
+
+if(type===0){
+
+// 弁天ザウルス
+r(8,30,30,15,"#377d57");
+r(14,17,25,21,"#4cba77");
+r(29,12,12,16,"#4cba77");
+r(36,17,8,9,"#4cba77");
+
+r(15,10,6,8,"#348a5c");
+r(21,7,6,9,"#348a5c");
+r(27,10,6,8,"#348a5c");
+
+r(34,18,4,4,"#182528");
+r(35,18,1,1,"#fff");
+
+r(39,26,5,3,"#f2dfb7");
+r(33,28,3,3,"#fff");
+
+r(7,34,10,7,"#4cba77");
+r(3,38,8,5,"#348a5c");
+
+r(15,40,7,7,"#31704d");
+r(29,40,7,7,"#31704d");
+
+r(14,30,20,5,"#ba4840");
+r(20,29,6,14,"#d7a752");
+
+r(9,24,8,5,"#4cba77");
+r(37,31,7,4,"#4cba77");
+
+r(10,19,4,5,"#e5ba62");
+r(14,16,4,5,"#e5ba62");
+
+if(state.chapter>=1){
+r(16,5,18,5,"#d7aa55");
+r(20,1,10,6,"#e7c16b");
+}
+
+if(state.chapter>=2){
+r(23,0,4,8,"#fff1ac");
+r(12,27,24,4,"#f1ca6b");
+}
+
+}else{
+
+// 仲間・敵キャラ
+const colors=[
+"#b56d52",
+"#568ca6",
+"#9c7dba",
+"#57a18b",
+"#bc9a55"
+];
+
+const color=colors[Math.abs(type)%5];
+
+r(10,34,28,14,color);
+r(13,15,22,20,"#e5b68c");
+r(11,11,26,9,color);
+r(17,22,4,4,"#222");
+r(28,22,4,4,"#222");
+r(22,30,6,2,"#98634d");
+r(23,35,3,13,"#e7c777");
+r(39,19,3,28,"#cbb68b");
+
+}
+}
+
+function portrait(type=0,size=44){
+let canvas=document.createElement("canvas");
+canvas.width=48;
+canvas.height=48;
+canvas.style.width=size+"px";
+canvas.style.height=size+"px";
+canvas.style.imageRendering="pixelated";
+pixel(canvas,type);
+return canvas;
+}
+
+function modal(title,text,buttons){
+running=false;
+$("modal").classList.add("show");
+$("modalTitle").textContent=title;
+$("modalText").textContent=text;
+
+let container=$("modalButtons");
+container.replaceChildren();
+
+buttons.forEach(([label,fn])=>{
+let b=document.createElement("button");
+b.textContent=label;
+
+b.onclick=()=>{
+$("modal").classList.remove("show");
+if(fn)fn();
+render();
+};
+
+container.appendChild(b);
+});
+
+render();
+}
+
+function render(){
+const ch=chapterData();
+
+$("territory").textContent=
+state.owned.length+"/"+ch.places.length;
+
+$("money").textContent=state.money;
+$("army").textContent=state.army;
+$("trust").textContent=state.trust;
+
+$("chapter").textContent=ch.title;
+
+$("year").textContent=
+state.year+"年目・"+
+["春","夏","秋","冬"][state.season];
+
+$("mapTitle").textContent=ch.mapTitle;
+
+$("progressFill").style.width=progress+"%";
+
+$("run").innerHTML=running?
+"⏸ 一時停止<small>進行を止める</small>":
+"▶ 進軍開始<small>自動進行</small>";
+
+["attack","talk","gift"].forEach(id=>{
+$(id).classList.toggle("active",mode===id);
+});
+
+$("heroName").textContent=
+state.chapter===0?"弁天ザウルス":
+state.chapter===1?"上山ザウルス":
+"出羽ザウルス";
+
+pixel($("heroPortrait"),0);
+
+if(selected){
+let p=placeById(selected);
+if(p){
+$("targetName").textContent=p.name;
+$("targetDesc").textContent="名産・資源："+p.good;
+$("targetRight").textContent=
+state.owned.includes(p.id)?
+"統治中":"守備力 "+p.power;
+}
+}else{
+$("targetName").textContent="地図から攻略地点を選択";
+$("targetDesc").textContent="マーカーをタップ";
+$("targetRight").textContent="未選択";
+}
+
+updateMarkers();
+save();
+}
+
+function selectPlace(id){
+selected=id;
+let p=placeById(id);
+if(!p)return;
+
+if(state.owned.includes(id)){
+log(p.name+"はすでに弁天ザウルスの領土です。");
+}else{
+log(p.name+"を選択。守備力"+p.power+"。"+
+"出陣・外交・贈答から作戦を選べます。");
+}
+
+render();
+}
+
+function markerIcon(place){
+let owned=state.owned.includes(place.id);
+let home=place.id===chapterData().places[0].id;
+let active=selected===place.id;
+
+let cls="place-marker";
+if(owned)cls+=" owned";
+if(home)cls+=" home";
+if(active)cls+=" selected";
+
+return L.divIcon({
+className:"",
+html:'<div class="'+cls+'">'+
+(home?"★":owned?"✓":"!")+
+"</div>",
+iconSize:[25,25],
+iconAnchor:[12,12]
+});
+}
+
+function updateMarkers(){
+if(!mapReady)return;
+markers.forEach(item=>{
+item.marker.setIcon(markerIcon(item.place));
+});
+if(boundaryLayer){
+boundaryLayer.eachLayer(layer=>{
+const id=layer.feature?._gameId;
+if(!id)return;
+layer.setStyle({
+fillColor:state.owned.includes(id)?"#29976e":
+selected===id?"#dfaa52":"#a44850",
+fillOpacity:.35,
+color:selected===id?"#fff":"#f5e3be",
+weight:selected===id?3:1
+});
+});
+}
+}
+
+function drawMarkers(){
+markers.forEach(x=>map.removeLayer(x.marker));
+markers=[];
+
+chapterData().places.forEach(p=>{
+let marker=L.marker([p.lat,p.lng],{
+icon:markerIcon(p)
+}).addTo(map);
+
+marker.bindTooltip(p.name,{
+direction:"top",
+offset:[0,-13]
+});
+
+marker.on("click",()=>selectPlace(p.id));
+
+markers.push({place:p,marker});
+});
+}
+
+function changeMap(){
+if(!mapReady)return;
+
+if(boundaryLayer){
+map.removeLayer(boundaryLayer);
+boundaryLayer=null;
+}
+
+const ch=chapterData();
+
+map.flyTo(ch.center,ch.zoom,{
+duration:1.5
+});
+
+drawMarkers();
+
+$("mapSub").textContent=
+state.chapter===2?
+"35市町村・行政境界を取得中":
+"道路・地形はOpenStreetMap";
+
+if(state.chapter===2){
+loadBoundaries();
+}
+}
+
+function normalizeName(s){
+return String(s||"")
+.replace(/\s/g,"")
+.replace(/^山形県/,"")
+.replace(/（.*?）/g,"");
+}
+
+async function loadBoundaries(){
+/*
+ geoBoundaries の ADM2 を試行。
+ 提供データの行政階層や名称が
+ 一致しない場合はマーカー表示を維持。
+*/
+try{
+const api=
+"https://www.geoboundaries.org/api/current/gbOpen/JPN/ADM2/";
+
+const response=await fetch(api);
+
+if(!response.ok)throw Error("API error");
+
+const meta=await response.json();
+
+const url=meta.simplifiedGeometryGeoJSON||
+meta.gjDownloadURL;
+
+if(!url)throw Error("GeoJSON URLなし");
+
+const geoResponse=await fetch(url);
+if(!geoResponse.ok)throw Error("GeoJSON取得失敗");
+
+const geo=await geoResponse.json();
+
+const features=(geo.features||[]).map(f=>{
+const props=f.properties||{};
+
+const rawName=
+props.shapeName||
+props.name||
+props.NAME_2||
+props.N03_004||
+"";
+
+const name=normalizeName(rawName);
+
+const p=chapterData().places.find(x=>
+normalizeName(x.name)===name
+);
+
+if(!p)return null;
+
+return{
+...f,
+_gameId:p.id
+};
+}).filter(Boolean);
+
+const ids=new Set(features.map(f=>f._gameId));
+
+if(ids.size<20){
+throw Error("自治体境界の照合不足");
+}
+
+boundaryLayer=L.geoJSON({
+type:"FeatureCollection",
+features:features.map(f=>({
+...f,
+properties:{
+...f.properties,
+_gameId:f._gameId
+}
+}))
+},{
+style:feature=>({
+fillColor:state.owned.includes(
+feature.properties._gameId
+)?"#29976e":"#a44850",
+fillOpacity:.35,
+color:"#f5e3be",
+weight:1
+}),
+onEachFeature:(feature,layer)=>{
+layer.feature._gameId=
+feature.properties._gameId;
+
+layer.on("click",()=>{
+selectPlace(feature.properties._gameId);
+});
+}
+}).addTo(map);
+
+$("mapSub").textContent=
+"実際の行政境界を表示中";
+
+updateMarkers();
+
+}catch(e){
+console.warn("行政境界取得失敗",e);
+$("mapSub").textContent=
+"自治体の代表地点を表示中";
+}
+}
+
+function setupMap(){
+if(typeof L==="undefined"){
+log("地図ライブラリを読み込めませんでした。");
+return;
+}
+
+map=L.map("map",{
+zoomControl:true,
+preferCanvas:true
+}).setView([38.17,140.28],15);
+
+L.tileLayer(
+"https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+{
+maxZoom:19,
+attribution:
+'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}
+).addTo(map);
+
+mapReady=true;
+changeMap();
+render();
+}
+
+function battle(title,text,enemy,callback){
+busy=true;
+running=false;
+
+$("battleTitle").textContent=title;
+$("battleResult").textContent=text;
+
+pixel($("fighterHero"),0);
+pixel($("fighterEnemy"),2);
+
+$("battle").classList.add("show");
+
+setTimeout(()=>{
+$("battle").classList.remove("show");
+busy=false;
+callback();
+render();
+},1300);
+}
+
+function recruit(place){
+if(state.recruits.some(x=>x.name===place.hero)){
+return;
+}
+
+modal(
+"新たな仲間！",
+place.hero+"が仲間になりたそうです。\n"+
+"秘書官「採用には人事課の承認が必要ですが、もう入庁しています。」",
+[
+["仲間に迎える",()=>{
+const hero={
+name:place.hero,
+origin:place.name,
+loyalty:65,
+power:rand(5,12)
+};
+
+state.recruits.push(hero);
+
+if(state.party.length<3){
+state.party.push(hero.name);
+}
+
+log(place.hero+"が仲間になった！");
+}],
+["人材名簿に登録する",()=>{
+state.recruits.push({
+name:place.hero,
+origin:place.name,
+loyalty:55,
+power:rand(5,12)
+});
+log(place.hero+"を人材名簿に登録した。");
+}]
+]
+);
+}
+
+function conquered(place){
+if(!state.owned.includes(place.id)){
+state.owned.push(place.id);
+}
+
+state.money+=rand(10,20);
+state.army+=rand(3,8);
+
+log(place.name+"を統一！ "+place.good+"を獲得！");
+say("次はどこを攻めるか！");
+
+render();
+
+if(state.owned.length===chapterData().places.length){
+chapterComplete();
+}else{
+recruit(place);
+}
+}
+
+function chapterComplete(){
+running=false;
+
+if(state.chapter===0){
+modal(
+"第1章 完結・弁天統一",
+"弁天二丁目を起点とした周辺勢力を統一！\n\n"+
+"弁天ザウルス「町内会は制した。次は上山市だ！」\n\n"+
+"秘書官「市長、まだ町内会長です。」",
+[
+["第2章・上山市統一編へ",()=>{
+state.chapter=1;
+state.owned=["city_benten"];
+selected=null;
+state.money+=40;
+state.army+=30;
+say("上山市を統一するぞ！");
+changeMap();
+}]
+]
+);
+}else if(state.chapter===1){
+modal(
+"第2章 完結・上山市統一",
+"ついに上山市を完全統一！\n\n"+
+"弁天ザウルスは上山ザウルスへ進化した！\n\n"+
+"秘書官「山形県庁から説明を求められています。」",
+[
+["第3章・山形県統一編へ",()=>{
+state.chapter=2;
+state.owned=["06207"];
+selected=null;
+state.money+=100;
+state.army+=60;
+say("山形県の全市町村を統一する！");
+changeMap();
+}]
+]
+);
+}else{
+ending();
+}
+}
+
+function ending(){
+let title;
+let body;
+
+if(state.military>state.diplomacy*1.5){
+title="案山子も恐れる恐竜帝国";
+body="武力によって山形県は統一された。\n"+
+"県庁の入り口には巨大な弁天ザウルス像が建った。";
+}else if(state.diplomacy>state.military){
+title="山形連邦共和国";
+body="対話によって山形県は統一された。\n"+
+"県議会は満場一致で恐竜を議長に選出した。";
+}else{
+title="出羽ザウルスの天下";
+body="武力と外交を駆使し、山形県35市町村を統一。\n"+
+"弁天二丁目の野望は現実となった。";
+}
+
+modal(
+"山形県統一！ "+title,
+body+"\n\n統一まで："+state.year+"年",
+[
+["最初から遊ぶ",()=>{
+state=initialState();
+selected=null;
+changeMap();
+}],
+["統一後の地図を見る",()=>{}]
+]
+);
+}
+
+function execute(){
+if(busy)return;
+
+if(!selected){
+log("地図の攻略地点を選択してください。");
+return;
+}
+
+const p=placeById(selected);
+
+if(!p)return;
+
+if(state.owned.includes(p.id)){
+log(p.name+"はすでに統治中です。");
+return;
+}
+
+const partyPower=state.party.reduce((sum,name)=>{
+const h=state.recruits.find(x=>x.name===name);
+return sum+(h?h.power:0);
+},0);
+
+if(mode==="attack"){
+if(state.army<12){
+log("兵力不足。徴兵が必要です。");
+return;
+}
+
+state.army-=12;
+state.military++;
+
+const chance=clamp(
+68+partyPower/2-p.power/2+
+state.army/15,
+18,94
+);
+
+battle(
+"出陣！ "+p.name,
+"弁天ザウルスの大暴走！",
+p,
+()=>{
+if(rand(1,100)<=chance){
+conquered(p);
+}else{
+state.trust=clamp(state.trust-3,0,100);
+log(p.name+"の守備隊に敗北。"+
+"秘書官「敗因は予算不足と説明します。」");
+}
+}
+);
+
+}else if(mode==="talk"){
+state.diplomacy++;
+
+const chance=clamp(
+35+state.trust/2-p.power/3+
+partyPower/3,
+12,90
+);
+
+battle(
+"外交交渉！",
+p.name+"の代表と会談中…",
+p,
+()=>{
+if(rand(1,100)<=chance){
+conquered(p);
+}else{
+state.trust=clamp(state.trust-2,0,100);
+log(p.name+"「持ち帰って検討します」");
+}
+}
+);
+
+}else{
+if(state.money<15){
+log("軍資金が足りません。");
+return;
+}
+
+state.money-=15;
+state.diplomacy++;
+
+const chance=clamp(
+75-p.power/4+partyPower/4,
+20,94
+);
+
+battle(
+"贈答外交！",
+"大量の名産品を持参！",
+p,
+()=>{
+if(rand(1,100)<=chance){
+conquered(p);
+}else{
+log(p.name+
+"「お土産はいただきますが、合併は別件です」");
+}
+}
+);
+}
+
+render();
+}
+
+function choiceEvent(){
+const events=[
+{
+title:"町内会の予算問題",
+text:"秘書官「町内会費を軍事費に流用した疑惑が発生しました！」",
+options:[
+["住民に説明する",()=>{
+state.trust=clamp(state.trust+12,0,100);
+state.money=Math.max(0,state.money-10);
+state.reputation++;
+log("住民説明会が成功した。");
+}],
+["強行採決する",()=>{
+state.money+=25;
+state.trust=clamp(state.trust-18,0,100);
+state.flags.force=true;
+log("予算は確保したが、住民が怒っている。");
+}],
+["会計資料を紛失する",()=>{
+state.money+=10;
+state.flags.audit=true;
+log("会計資料はなぜか見つからない。");
+}]
+]
+},
+{
+title:"弁天ザウルスの銅像計画",
+text:"巨大な恐竜像を建設する案が浮上。市民からは賛否両論。",
+options:[
+["建設する（予算−30）",()=>{
+state.money=Math.max(0,state.money-30);
+state.army+=15;
+state.flags.statue=true;
+log("巨大恐竜像が完成。士気が上昇！");
+}],
+["学校に寄付する",()=>{
+state.money=Math.max(0,state.money-15);
+state.trust=clamp(state.trust+15,0,100);
+state.flags.school=true;
+log("教育投資が市民から支持された。");
+}],
+["計画を白紙に戻す",()=>{
+state.money+=5;
+log("計画は白紙。設計費だけが残った。");
+}]
+]
+},
+{
+title:"隣県からの圧力",
+text:"宮城県から「何をしているのか」と問い合わせが届いた。",
+options:[
+["堂々と宣戦布告",()=>{
+state.army+=15;
+state.trust=clamp(state.trust-8,0,100);
+state.flags.rival=true;
+log("宮城県との緊張が高まった。");
+}],
+["観光交流を提案",()=>{
+state.money=Math.max(0,state.money-15);
+state.trust=clamp(state.trust+12,0,100);
+state.flags.peace=true;
+log("観光交流協定が結ばれた。");
+}],
+["問い合わせを無視",()=>{
+state.flags.ignore=true;
+log("既読をつけずに放置した。");
+}]
+]
+}
+];
+
+const e=events[rand(0,events.length-1)];
+
+modal(e.title,e.text,e.options);
+}
+
+function advance(){
+state.season++;
+
+if(state.season>=4){
+state.season=0;
+state.year++;
+}
+
+state.money+=8+state.owned.length*2;
+state.army=clamp(state.army+4,0,999);
+state.trust=clamp(state.trust+1,0,100);
+
+if(state.flags.audit&&Math.random()<.12){
+state.money=Math.max(0,state.money-20);
+log("監査委員が失われた会計資料を発見！");
+state.flags.audit=false;
+}
+
+if(state.flags.statue&&Math.random()<.08){
+state.trust=clamp(state.trust+5,0,100);
+log("恐竜像が観光名所になった！");
+}
+
+if(state.flags.school&&Math.random()<.08){
+state.money+=15;
+log("教育投資が地域産業の成長につながった！");
+}
+
+if(Math.random()<.13){
+choiceEvent();
+}
+
+render();
+}
+
+function partyMenu(){
+const names=state.party.length?
+state.party.join("、"):"まだ仲間はいません。";
+
+modal(
+"仲間・編成",
+"現在のパーティ："+names+
+"\n\n仲間は最大3人。戦闘や外交の成功率に影響します。",
+[
+["編成を変更",()=>showRoster()],
+["閉じる",()=>{}]
+]
+);
+}
+
+function showRoster(){
+running=false;
+
+$("modal").classList.add("show");
+$("modalTitle").textContent="仲間を編成";
+$("modalText").textContent=
+"仲間をタップすると編成・解除できます。最大3人。";
+
+const area=$("modalButtons");
+area.replaceChildren();
+
+const grid=document.createElement("div");
+grid.className="roster";
+
+state.recruits.forEach((hero,i)=>{
+let b=document.createElement("button");
+
+b.appendChild(portrait(i+1,47));
+
+const active=state.party.includes(hero.name);
+
+b.appendChild(document.createTextNode(
+hero.name+(active?" ✓":"")
+));
+
+b.onclick=()=>{
+if(active){
+state.party=state.party.filter(n=>n!==hero.name);
+}else if(state.party.length<3){
+state.party.push(hero.name);
+}
+showRoster();
+render();
+};
+
+grid.appendChild(b);
+});
+
+if(!state.recruits.length){
+grid.textContent=
+"まだ仲間がいません。領土を増やして仲間を集めましょう。";
+}
+
+area.appendChild(grid);
+
+const close=document.createElement("button");
+close.textContent="閉じる";
+close.onclick=()=>{
+$("modal").classList.remove("show");
+render();
+};
+area.appendChild(close);
+}
+
+$("attack").onclick=()=>{
+mode="attack";
+log("出陣を選択。兵力を消費して攻略します。");
+render();
+};
+
+$("talk").onclick=()=>{
+mode="talk";
+log("外交を選択。民心と仲間の力が重要です。");
+render();
+};
+
+$("gift").onclick=()=>{
+mode="gift";
+log("贈答を選択。軍資金を使って合併を狙います。");
+render();
+};
+
+$("train").onclick=()=>{
+if(state.money<20){
+log("軍資金が不足しています。");
+return;
+}
+state.money-=20;
+state.army+=30;
+log("徴兵成功！ 兵力が30増加した。");
+render();
+};
+
+$("develop").onclick=()=>{
+if(state.money<15){
+log("軍資金が不足しています。");
+return;
+}
+
+state.money-=15;
+state.trust=clamp(state.trust+12,0,100);
+state.development++;
+
+log("内政を実施。民心が12上昇！");
+render();
+};
+
+$("partyButton").onclick=partyMenu;
+
+$("run").onclick=()=>{
+if(busy)return;
+
+if(!selected){
+log("まず地図の攻略地点を選択してください。");
+return;
+}
+
+running=!running;
+render();
+};
+
+setInterval(()=>{
+if(!running||busy)return;
+if($("modal").classList.contains("show"))return;
+
+progress+=2.5;
+
+if(progress>=100){
+progress=0;
+running=false;
+execute();
+advance();
+}
+
+render();
+},110);
+
+window.addEventListener("load",()=>{
+setupMap();
+render();
+});
+
+</script>
+</body>
+</html>
